@@ -1,9 +1,9 @@
-function FeatureMatching(wkdir, dataset, matcher,method)
+function FeatureMatching(wkdir, dataset, matcher, method, ratio_val)
 % Matching descriptors and save results
 %method can be 'ratio' or 'mutual'
 
 dataset_dir = [wkdir 'Dataset/' dataset '/'];
-feature_dir = [wkdir 'Features/' dataset '/'];
+feature_dir = [wkdir 'Features_' matcher '/' dataset '/'];
 
 matches_dir = [wkdir 'Matches/' dataset '/'];
 if exist(matches_dir, 'dir') == 0
@@ -20,6 +20,7 @@ r_pairs = pairs(:,2);
 num_pairs = size(pairs,1);
 Matches = cell(num_pairs, 1);
 for idx = 1 : num_pairs
+    disp(idx)
     l = l_pairs(idx);
     r = r_pairs(idx);
     
@@ -39,7 +40,7 @@ for idx = 1 : num_pairs
     descriptors_l = read_descriptors([path_l '.descriptors']);
     descriptors_r = read_descriptors([path_r '.descriptors']);
     
-    [X_l, X_r] = match_descriptors(keypoints_l, keypoints_r, descriptors_l, descriptors_r,method);
+    [X_l, X_r] = match_descriptors(keypoints_l, keypoints_r, descriptors_l, descriptors_r, method, ratio_val);
     
     Matches{idx}.size_l = size_l;
     Matches{idx}.size_r = size_r;

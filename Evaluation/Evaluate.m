@@ -1,10 +1,11 @@
 clear; close all; clc;
 
+wkdir = '../';
 
-% Datasets = {'TUM', 'KITTI', 'Tanks_and_Temples', 'CPC'};
-Datasets = {'TUM'};
+Datasets = {'TUM', 'KITTI', 'Tanks_and_Temples', 'CPC'};
 
-Methods = {'SIFT-RT-RANSAC'};
+Methods = {'<methods>-RANSAC'};
+draw_fig = false;
 
 Errors = cell(length(Methods),length(Datasets));
 Inlier_rates = cell(length(Methods),length(Datasets));
@@ -16,6 +17,7 @@ for d = 1 : length(Datasets)
         
         results_dir = ['../Results/' dataset '/'];
         filename = [results_dir method '.mat'];
+        disp(filename)
         Results = importdata(filename);        
         
         Error = -ones(length(Results), 1);
@@ -23,7 +25,6 @@ for d = 1 : length(Datasets)
         Number =  zeros(length(Results), 2);
         
         for idx = 1 : length(Results)
-            
             if Results{idx}.status ~=0
                 Results{idx}.sgd_error = -1;
                 Results{idx}.inlier_rate = [0,0];
@@ -39,6 +40,7 @@ for d = 1 : length(Datasets)
             inliers = Results{idx}.inliers;
 
             if isfield(Results{idx}, 'sgd_error') ~= 1 || Results{idx}.sgd_error < 0
+                disp(idx)
                 Results{idx}.sgd_error = ComputeNormlizedSGD(F1, F2, size1, size2);            
             end
             Error(idx) = Results{idx}.sgd_error; 
@@ -75,13 +77,16 @@ for d = 1 : length(Datasets)
            Y(m, t) = sum(Errors{m,d} < X(t)) / num_pairs;
        end
     end
-    figure;
-    h = plot(X,Y,'linewidth',3);
-    ylim([0 1]);
-    legend(h, Methods, 'Location', 'SouthEast');
-    title(dataset);
-    xlabel('NSGD Threshold');
-    ylabel('Recall');
+
+    if draw_fig
+        figure;
+        h = plot(X,Y,'linewidth',3);
+        ylim([0 1]);
+        legend(h, Methods, 'Location', 'SouthEast');
+        title(dataset);
+        xlabel('NSGD Threshold');
+        ylabel('Recall');
+    end
 end
 
 threshold = 0.05;
@@ -103,3 +108,27 @@ for d = 1 : length(Datasets)
     end 
 end
 
+for d = 1 : length(Datasets) 
+    dataset = Datasets{d};
+    for m = 1 : length(Methods)
+        method = Methods{m};
+        results_dir = [wkdir 'Results/' dataset '/'];
+        filename = [results_dir method '.mat'];
+        Results = importdata(filename);
+        corr_total=0;
+        inlier_total=0;
+        for idx = 1 : length(Results)
+            size1 = Results{idx}.size_l;
+            size2 = Results{idx}.size_r;
+            X1 = Results{idx}.X_l';
+            X2 = Results{idx}.X_r';
+            inliers = Results{idx}.inliers;
+            corr=size(X1);
+            corr_total=corr_total+corr(2);
+            inlier_total=inlier_total+sum(inliers);
+        end
+        avg_corr=corr_total/length(Results);
+        avg_inlier=inlier_total/length(Results);
+        fprintf('%s: corr:%f  inlier:%f\n',dataset,avg_corr,avg_inlier);
+    end
+end

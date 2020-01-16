@@ -23,6 +23,7 @@ Results = Matches;
 num_pairs = size(pairs,1);
 
 for idx = 1 : num_pairs
+    disp(idx)
     l = l_pairs(idx);
     r = r_pairs(idx);
     
