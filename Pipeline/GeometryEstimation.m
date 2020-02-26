@@ -1,4 +1,4 @@
-function GeometryEstimation(wkdir, dataset, matcher, estimator)
+function GeometryEstimation(wkdir, dataset, matcher, estimator, n_feat)
 % Matching descriptors and save results
 disp('Running FM estimation...');
 
@@ -18,12 +18,25 @@ l_pairs = pairs(:,1);
 r_pairs = pairs(:,2);
 F_gts = pairs_gts(:,3:11);
 
-load([matches_dir matcher '.mat']);
+
+if n_feat > 0
+    matches_file = [matches_dir matcher '_' int2str(n_feat) '.mat'];
+    results_file = [results_dir matcher '_' int2str(n_feat) '-' estimator '.mat'];
+else
+    matches_file = [matches_dir matcher '.mat'];
+    results_file = [results_dir matcher '-' estimator '.mat'];
+end
+
+load(matches_file);
+
 Results = Matches;
 num_pairs = size(pairs,1);
 
 for idx = 1 : num_pairs
-    disp(idx)
+    if mod(idx, 10) == 0
+        disp(idx)
+    end
+
     l = l_pairs(idx);
     r = r_pairs(idx);
     
@@ -51,7 +64,6 @@ for idx = 1 : num_pairs
     Results{idx}.status = status;
 end
 
-results_file = [results_dir matcher '-' estimator '.mat'];
 save(results_file, 'Results');
 
 disp('Finished.');

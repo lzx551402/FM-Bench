@@ -3,8 +3,7 @@ clear; close all; clc;
 wkdir = '../';
 
 Datasets = {'TUM', 'KITTI', 'Tanks_and_Temples', 'CPC'};
-
-Methods = {'<methods>-RANSAC'};
+Methods = {'aslfeat-RANSAC'};
 draw_fig = false;
 
 Errors = cell(length(Methods),length(Datasets));

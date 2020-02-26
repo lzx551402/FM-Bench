@@ -1,4 +1,4 @@
-function FeatureMatching(wkdir, dataset, matcher, method, ratio_val)
+function FeatureMatching(wkdir, dataset, matcher, method, ratio_val, n_feat)
 % Matching descriptors and save results
 %method can be 'ratio' or 'mutual'
 
@@ -8,6 +8,12 @@ feature_dir = [wkdir 'Features_' matcher '/' dataset '/'];
 matches_dir = [wkdir 'Matches/' dataset '/'];
 if exist(matches_dir, 'dir') == 0
     mkdir(matches_dir);
+end
+
+if n_feat > 0
+    matches_file = [matches_dir matcher '_' int2str(n_feat) '.mat'];
+else
+    matches_file = [matches_dir matcher '.mat'];
 end
 
 pairs_gts = dlmread([dataset_dir 'pairs_with_gt.txt']);
@@ -20,7 +26,10 @@ r_pairs = pairs(:,2);
 num_pairs = size(pairs,1);
 Matches = cell(num_pairs, 1);
 for idx = 1 : num_pairs
-    disp(idx)
+    if mod(idx, 10) == 0
+        disp(idx)
+    end
+
     l = l_pairs(idx);
     r = r_pairs(idx);
     
@@ -39,7 +48,17 @@ for idx = 1 : num_pairs
     keypoints_r = read_keypoints([path_r '.keypoints']);
     descriptors_l = read_descriptors([path_l '.descriptors']);
     descriptors_r = read_descriptors([path_r '.descriptors']);
-    
+
+    if n_feat > 0 & size(keypoints_l, 1) > n_feat
+        keypoints_l = keypoints_l(1:n_feat, :);
+        descriptors_l = descriptors_l(1:n_feat, :);
+    end
+
+    if n_feat > 0 & size(keypoints_r, 1) > n_feat
+        keypoints_r = keypoints_r(1:n_feat, :);
+        descriptors_r = descriptors_r(1:n_feat, :);
+    end
+
     [X_l, X_r] = match_descriptors(keypoints_l, keypoints_r, descriptors_l, descriptors_r, method, ratio_val);
     
     Matches{idx}.size_l = size_l;
@@ -49,6 +68,5 @@ for idx = 1 : num_pairs
     Matches{idx}.X_r = X_r;
 end
 
-matches_file = [matches_dir matcher '.mat'];
 save(matches_file, 'Matches');
 end
